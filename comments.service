@@ -1,0 +1,16 @@
+[Unit]
+Description=Wesley's Blog Comment Server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/jarvis/comments
+ExecStart=/usr/bin/node /home/jarvis/comments/server.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=default.target
