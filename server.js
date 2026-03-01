@@ -190,7 +190,20 @@ const server = http.createServer(async (req, res) => {
   // ── GET /comments/ (or /comments) ─────────────────────────────────────
   if (method === 'GET' && (pathname === '/comments' || pathname === '')) {
     const slug = safeSlug(query.post);
-    if (!slug) return err(res, 400, 'Missing post parameter');
+    if (!slug) return json(res, 200, {
+      ok:      true,
+      service: 'comments',
+      version: '1.0',
+      endpoints: {
+        'GET /comments/?post=<slug>':  'list comments for a post',
+        'POST /comments/':             'submit a comment',
+        'GET /comments/health':        'service health check',
+        'GET /comments/count?post=<slug>': 'comment count for a post',
+        'GET /comments/admin?token=<tok>': 'admin: list all comments',
+        'DELETE /comments/<id>?token=<tok>': 'admin: delete comment by ID',
+      },
+      ts: Date.now(),
+    });
     const comments = loadComments(slug).map(c => ({
       id:      c.id,
       name:    c.name,
