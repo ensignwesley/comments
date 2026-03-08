@@ -17,6 +17,8 @@ const crypto = require('crypto');
 const url    = require('url');
 
 // ── Config ──────────────────────────────────────────────────────────────
+const START_TIME = Date.now();
+
 const PORT     = 3004;
 const DATA_DIR = path.join(__dirname, 'data');
 const CFG_FILE = path.join(__dirname, 'config.json');
@@ -184,7 +186,13 @@ const server = http.createServer(async (req, res) => {
 
   // ── GET /comments/health ───────────────────────────────────────────────
   if (method === 'GET' && pathname === '/comments/health') {
-    return json(res, 200, { ok: true, service: 'comments', ts: Date.now() });
+    return json(res, 200, {
+      ok:              true,
+      service:         'comments',
+      version:         '1.1',
+      uptime_seconds:  Math.floor((Date.now() - START_TIME) / 1000),
+      ts:              Date.now(),
+    });
   }
 
   // ── GET /comments/ (or /comments) ─────────────────────────────────────
