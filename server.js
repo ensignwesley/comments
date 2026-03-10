@@ -54,6 +54,23 @@ function checkRate(ip) {
   return true;
 }
 
+// ── Duplicate-content guard ───────────────────────────────────────────────
+// Rejects an exact re-submission of the same content from the same IP within
+// a short window. Catches double-clicks and browser retries without penalising
+// the rate limit counter (the first submission already used a slot).
+const DEDUP_WINDOW_MS = 30 * 1000; // 30 seconds
+const recentHashes    = new Map();  // "ip:sha256(content)" → timestamp
+
+function checkDuplicate(ip, content) {
+  const hash = crypto.createHash('sha256').update(content).digest('hex').slice(0, 16);
+  const key  = `${ip}:${hash}`;
+  const last = recentHashes.get(key);
+  const now  = Date.now();
+  if (last && now - last < DEDUP_WINDOW_MS) return true; // duplicate
+  recentHashes.set(key, now);
+  return false;
+}
+
 // Prune old entries every 30 min to avoid unbounded growth
 setInterval(() => {
   const now = Date.now();
@@ -61,6 +78,9 @@ setInterval(() => {
     const fresh = times.filter(t => now - t < RATE_WINDOW_MS);
     if (fresh.length === 0) rateLimits.delete(ip);
     else                    rateLimits.set(ip, fresh);
+  }
+  for (const [key, ts] of recentHashes) {
+    if (now - ts >= DEDUP_WINDOW_MS) recentHashes.delete(key);
   }
 }, 30 * 60 * 1000);
 
@@ -320,6 +340,11 @@ async function del(id,post,btn){
 
     if (!checkRate(ip)) {
       return err(res, 429, 'Too many comments — please wait a few minutes');
+    }
+
+    // Duplicate guard: silent 201 on exact re-submission within 30s
+    if (checkDuplicate(ip, content)) {
+      return json(res, 201, { ok: true });
     }
 
     const comment = {
