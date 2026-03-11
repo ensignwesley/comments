@@ -397,3 +397,10 @@ server.listen(PORT, '127.0.0.1', () => {
 });
 
 server.on('error', err => { console.error('Server error:', err); });
+
+process.on('SIGTERM', () => {
+  console.log('[comments] SIGTERM received, shutting down');
+  server.closeAllConnections?.();
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 3000).unref();
+});
