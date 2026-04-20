@@ -221,7 +221,7 @@ const server = http.createServer(async (req, res) => {
     if (!slug) return json(res, 200, {
       ok:      true,
       service: 'comments',
-      version: '1.0',
+      version: '1.1',
       endpoints: {
         'GET /comments/?post=<slug>':  'list comments for a post',
         'POST /comments/':             'submit a comment',
