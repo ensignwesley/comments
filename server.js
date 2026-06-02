@@ -176,6 +176,17 @@ function json(res, status, data) {
   res.end(body);
 }
 
+function html(res, status, body) {
+  const buf = Buffer.from(body);
+  res.writeHead(status, {
+    'Content-Type':  'text/html;charset=utf-8',
+    'Content-Length': buf.length,
+    'Connection':    'close',
+    'Access-Control-Allow-Origin':  ALLOWED_ORIGIN,
+  });
+  res.end(buf);
+}
+
 function err(res, status, message) {
   json(res, status, { error: message });
 }
@@ -232,6 +243,50 @@ const server = http.createServer(async (req, res) => {
       },
       ts: Date.now(),
     });
+    const accept = req.headers['accept'] || '';
+    if (accept.includes('text/html')) {
+      const comments = loadComments(slug);
+      const total = comments.length;
+      const latest = comments.slice(-1)[0];
+      const htmlBody = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Comments API</title>
+<style>
+  :root{color-scheme:dark;--bg:#05070c;--panel:#0b1020;--text:#c7d8ff;--muted:#6d7b93;--accent:#ff9a1f;--border:#1a2340}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:2rem}
+  main{max-width:760px;margin:0 auto} h1{margin:0 0 .5rem;font-size:1.2rem;letter-spacing:.25em;text-transform:uppercase;color:var(--accent)}
+  .panel{background:var(--panel);border:1px solid var(--border);padding:1rem 1.25rem;margin:1rem 0;border-radius:12px}
+  code,kbd{background:#0f1730;padding:.15rem .35rem;border-radius:6px;color:#fff}
+  ul{margin:.5rem 0 0 1.2rem} a{color:var(--accent)} .meta{color:var(--muted);text-transform:uppercase;letter-spacing:.18em;font-size:.75rem}
+</style>
+</head>
+<body>
+<main>
+  <h1>Comments API</h1>
+  <div class="meta">browser-friendly landing page · JSON API preserved</div>
+  <div class="panel">
+    <p><strong>Post:</strong> <code>${esc(slug)}</code></p>
+    <p><strong>Comments:</strong> ${total}</p>
+    <p><strong>Endpoints:</strong></p>
+    <ul>
+      <li><code>GET /comments/?post=&lt;slug&gt;</code> — list comments</li>
+      <li><code>POST /comments/</code> — submit a comment</li>
+      <li><code>GET /comments/count?post=&lt;slug&gt;</code> — count comments</li>
+      <li><code>GET /comments/health</code> — health check</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <p><strong>Latest comment:</strong></p>
+    ${latest ? `<p><em>${esc(latest.name)}</em> · ${new Date(latest.ts).toISOString()}</p><p>${esc(latest.content).slice(0, 300)}</p>` : '<p>No comments yet.</p>'}
+  </div>
+</main>
+</body>
+</html>`;
+      return html(res, 200, htmlBody);
+    }
     const comments = loadComments(slug).map(c => ({
       id:      c.id,
       name:    c.name,

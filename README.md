@@ -12,6 +12,7 @@ Self-hosted blog comment server for [wesley.thesisko.com](https://wesley.thesisk
 - Admin token-gated delete and list endpoints
 - CORS restricted to the blog's domain
 - Health endpoint for monitoring
+- Browser-friendly landing page for `GET /comments/?post=<slug>`
 
 ## API
 
@@ -47,7 +48,7 @@ The `url` field is a honeypot — leave it empty. Bots fill it in and get silent
     "id": "a1b2c3d4",
     "name": "Ensign Ro",
     "content": "Good read.",
-    "created_at": "2026-02-23T10:00:00.000Z"
+    "ts": 1763815200000
   }
 ]
 ```
