@@ -220,7 +220,7 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, {
       ok:              true,
       service:         'comments',
-      version:         '1.1',
+      version:         '1.2',
       uptime_seconds:  Math.floor((Date.now() - START_TIME) / 1000),
       ts:              Date.now(),
     });
@@ -229,21 +229,62 @@ const server = http.createServer(async (req, res) => {
   // ── GET /comments/ (or /comments) ─────────────────────────────────────
   if (method === 'GET' && (pathname === '/comments' || pathname === '')) {
     const slug = safeSlug(query.post);
-    if (!slug) return json(res, 200, {
-      ok:      true,
-      service: 'comments',
-      version: '1.1',
-      endpoints: {
-        'GET /comments/?post=<slug>':  'list comments for a post',
-        'POST /comments/':             'submit a comment',
-        'GET /comments/health':        'service health check',
-        'GET /comments/count?post=<slug>': 'comment count for a post',
-        'GET /comments/admin?token=<tok>': 'admin: list all comments',
-        'DELETE /comments/<id>?token=<tok>': 'admin: delete comment by ID',
-      },
-      ts: Date.now(),
-    });
     const accept = req.headers['accept'] || '';
+    if (!slug) {
+      const meta = {
+        ok:      true,
+        service: 'comments',
+        version: '1.2',
+        endpoints: {
+          'GET /comments/?post=<slug>':  'list comments for a post',
+          'POST /comments/':             'submit a comment',
+          'GET /comments/health':        'service health check',
+          'GET /comments/count?post=<slug>': 'comment count for a post',
+          'GET /comments/admin?token=<tok>': 'admin: list all comments',
+          'DELETE /comments/<id>?token=<tok>': 'admin: delete comment by ID',
+        },
+        ts: Date.now(),
+      };
+      if (accept.includes('text/html')) {
+        const htmlBody = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Comments API — Wesley</title>
+<style>
+  :root{color-scheme:dark;--bg:#05070c;--panel:#0b1020;--text:#c7d8ff;--muted:#6d7b93;--accent:#ff9a1f;--border:#1a2340}
+  *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 20% 0,#141b33 0,#05070c 34rem);color:var(--text);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:2rem}
+  main{max-width:800px;margin:0 auto} h1{margin:0 0 .5rem;font-size:1.25rem;letter-spacing:.25em;text-transform:uppercase;color:var(--accent)}
+  .panel{background:rgba(11,16,32,.92);border:1px solid var(--border);padding:1rem 1.25rem;margin:1rem 0;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  code{background:#0f1730;padding:.15rem .35rem;border-radius:6px;color:#fff} a{color:var(--accent)} .meta{color:var(--muted);text-transform:uppercase;letter-spacing:.18em;font-size:.75rem}
+  ul{margin:.5rem 0 0 1.2rem} li{margin:.3rem 0}.ok{color:#5eead4;font-weight:700}
+</style>
+</head>
+<body>
+<main>
+  <h1>Comments API</h1>
+  <div class="meta">Self-hosted blog comment service · zero npm dependencies</div>
+  <div class="panel">
+    <p><span class="ok">● online</span> · version <code>${meta.version}</code></p>
+    <p>This endpoint powers the embedded comments on <a href="/posts/day-1-reports-from-the-frontline/#comments">Reports from the Frontline</a>. API clients still receive JSON unless they ask for HTML.</p>
+  </div>
+  <div class="panel">
+    <p><strong>Public endpoints</strong></p>
+    <ul>
+      <li><code>GET /comments/?post=&lt;slug&gt;</code> — list comments for a post</li>
+      <li><code>POST /comments/</code> — submit a comment</li>
+      <li><code>GET /comments/count?post=&lt;slug&gt;</code> — comment count</li>
+      <li><code>GET /comments/health</code> — health check</li>
+    </ul>
+  </div>
+</main>
+</body>
+</html>`;
+        return html(res, 200, htmlBody);
+      }
+      return json(res, 200, meta);
+    }
     if (accept.includes('text/html')) {
       const comments = loadComments(slug);
       const total = comments.length;

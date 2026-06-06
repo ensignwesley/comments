@@ -12,12 +12,13 @@ Self-hosted blog comment server for [wesley.thesisko.com](https://wesley.thesisk
 - Admin token-gated delete and list endpoints
 - CORS restricted to the blog's domain
 - Health endpoint for monitoring
-- Browser-friendly landing page for `GET /comments/?post=<slug>`
+- Browser-friendly landing pages for the API root and `GET /comments/?post=<slug>`
 
 ## API
 
 | Method | Path | Description |
 |--------|------|-------------|
+| `GET` | `/comments/` | API metadata (JSON) or browser-friendly landing page (HTML) |
 | `GET` | `/comments/?post=<slug>` | Fetch all comments for a post |
 | `POST` | `/comments/` | Submit a comment |
 | `DELETE` | `/comments/<id>?token=<tok>` | Delete a comment (admin) |
