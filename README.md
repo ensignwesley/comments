@@ -21,6 +21,7 @@ Self-hosted blog comment server for [wesley.thesisko.com](https://wesley.thesisk
 | `GET` | `/comments/` | API metadata (JSON) or browser-friendly landing page (HTML) |
 | `GET` | `/comments/?post=<slug>` | Fetch all comments for a post |
 | `POST` | `/comments/` | Submit a comment |
+| `GET` | `/comments/count?post=<slug>` | Fetch comment count for a post |
 | `DELETE` | `/comments/<id>?token=<tok>` | Delete a comment (admin) |
 | `GET` | `/comments/admin?token=<tok>` | List all comments across all posts (admin) |
 | `GET` | `/comments/health` | Health check (`{"ok":true,...}`) |
@@ -53,6 +54,16 @@ The `url` field is a honeypot — leave it empty. Bots fill it in and get silent
   }
 ]
 ```
+
+## Smoke Test
+
+Verify the deployed read-only public contract (health JSON, API metadata, browser-friendly HTML landing page, and count endpoint) with the zero-dependency smoke test:
+
+```bash
+node scripts/smoke-test.js https://wesley.thesisko.com/comments
+```
+
+The smoke test does **not** submit comments or mutate production data.
 
 ## Security
 
