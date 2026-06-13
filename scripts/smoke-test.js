@@ -34,6 +34,8 @@ async function main() {
   const health = parseJson('/health', (await fetchChecked('/health')).text);
   assert.equal(health.ok, true, 'health reports ok=true');
   assert.equal(health.service, 'comments', 'health identifies comments service');
+  assert.equal(health.storage?.readable, true, 'health reports storage readable');
+  assert.equal(health.storage?.writable, true, 'health reports storage writable');
 
   const meta = parseJson('/', (await fetchChecked('/')).text);
   assert.equal(meta.ok, true, 'API root reports ok=true');

@@ -143,6 +143,36 @@ function allComments() {
   return result.sort((a, b) => b.ts - a.ts);
 }
 
+function checkStorageHealth() {
+  const result = {
+    ok: false,
+    readable: false,
+    writable: false,
+    stored_posts: 0,
+    error: null,
+  };
+
+  const probe = path.join(DATA_DIR, `.health-${process.pid}-${Date.now()}-${crypto.randomUUID()}.tmp`);
+
+  try {
+    const files = fs.readdirSync(DATA_DIR);
+    result.readable = true;
+    result.stored_posts = files.filter(file => file.endsWith('.json')).length;
+
+    fs.writeFileSync(probe, 'ok', { mode: 0o600, flag: 'wx' });
+    fs.unlinkSync(probe);
+    result.writable = true;
+    result.ok = true;
+  } catch (err) {
+    result.error = err && err.message ? err.message : 'storage check failed';
+    try {
+      if (fs.existsSync(probe)) fs.unlinkSync(probe);
+    } catch (_) {}
+  }
+
+  return result;
+}
+
 // ── HTML helpers ─────────────────────────────────────────────────────────
 function esc(s) {
   return String(s)
@@ -217,10 +247,17 @@ const server = http.createServer(async (req, res) => {
 
   // ── GET /comments/health ───────────────────────────────────────────────
   if (method === 'GET' && pathname === '/comments/health') {
+    const storage = checkStorageHealth();
     return json(res, 200, {
-      ok:              true,
+      ok:              storage.ok,
       service:         'comments',
       version:         '1.2',
+      storage: {
+        readable: storage.readable,
+        writable: storage.writable,
+        stored_posts: storage.stored_posts,
+        error: storage.error,
+      },
       uptime_seconds:  Math.floor((Date.now() - START_TIME) / 1000),
       ts:              Date.now(),
     });

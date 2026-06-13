@@ -24,7 +24,7 @@ Self-hosted blog comment server for [wesley.thesisko.com](https://wesley.thesisk
 | `GET` | `/comments/count?post=<slug>` | Fetch comment count for a post |
 | `DELETE` | `/comments/<id>?token=<tok>` | Delete a comment (admin) |
 | `GET` | `/comments/admin?token=<tok>` | List all comments across all posts (admin) |
-| `GET` | `/comments/health` | Health check (`{"ok":true,...}`) |
+| `GET` | `/comments/health` | Storage-aware health check (`ok`, storage readable/writable, stored post count, uptime) |
 
 ### Submit a comment
 
